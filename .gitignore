@@ -1,0 +1,10 @@
+*.user
+
+.vs/
+ctf/debug/
+ctf/release/
+debug/
+game/release/
+ref_gl/release/
+ref_soft/release/
+release/
