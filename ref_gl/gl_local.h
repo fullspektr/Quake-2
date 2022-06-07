@@ -399,6 +399,7 @@ typedef struct
 	const char *vendor_string;
 	const char *version_string;
 	const char *extensions_string;
+	const char *sys_extensions_string;
 
 	qboolean	allow_cds;
 } glconfig_t;

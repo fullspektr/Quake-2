@@ -1161,6 +1161,20 @@ int R_Init( void *hinstance, void *hWnd )
 	gl_config.extensions_string = qglGetString (GL_EXTENSIONS);
 	ri.Con_Printf (PRINT_ALL, "GL_EXTENSIONS: %s\n", gl_config.extensions_string );
 
+	/* Get WGL extensions */
+#ifdef _WIN32
+	const char * (WINAPI * qwglGetExtensionsStringARB) (HDC);
+	if (qwglGetExtensionsStringARB = qwglGetProcAddress("wglGetExtensionsStringARB"))
+	{
+		gl_config.sys_extensions_string = qwglGetExtensionsStringARB(qwglGetCurrentDC());
+		ri.Con_Printf(PRINT_ALL, "WGL_EXTENSIONS: %s\n", gl_config.sys_extensions_string);
+	}
+	else
+	{
+		ri.Con_Printf(PRINT_ALL, "wglGetExtensionsStringARB not found\n");
+	}
+#endif
+
 	strcpy( renderer_buffer, gl_config.renderer_string );
 	strlwr( renderer_buffer );
 
@@ -1262,7 +1276,8 @@ int R_Init( void *hinstance, void *hWnd )
 	}
 
 #ifdef _WIN32
-	if ( strstr( gl_config.extensions_string, "WGL_EXT_swap_control" ) )
+	if ( strstr( gl_config.sys_extensions_string, "WGL_EXT_swap_control" ) || 
+		 strstr( gl_config.extensions_string, "WGL_EXT_swap_control" ) )
 	{
 		qwglSwapIntervalEXT = ( BOOL (WINAPI *)(int)) qwglGetProcAddress( "wglSwapIntervalEXT" );
 		ri.Con_Printf( PRINT_ALL, "...enabling WGL_EXT_swap_control\n" );
@@ -1533,7 +1548,7 @@ void R_BeginFrame( float camera_separation )
 	/*
 	** swapinterval stuff
 	*/
-	GL_UpdateSwapInterval();
+	//GL_UpdateSwapInterval();
 
 	//
 	// clear screen if desired

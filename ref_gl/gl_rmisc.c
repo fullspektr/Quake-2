@@ -231,8 +231,9 @@ void GL_SetDefaultState( void )
 
 void GL_UpdateSwapInterval( void )
 {
-	if ( gl_swapinterval->modified )
-	{
+	// ignore "modified" property
+	//if ( gl_swapinterval->modified )
+	//{
 		gl_swapinterval->modified = false;
 
 		if ( !gl_state.stereo_enabled ) 
@@ -242,5 +243,5 @@ void GL_UpdateSwapInterval( void )
 				qwglSwapIntervalEXT( gl_swapinterval->value );
 #endif
 		}
-	}
+	//}
 }
