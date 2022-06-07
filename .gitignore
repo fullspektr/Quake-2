@@ -1,6 +1,7 @@
 *.user
 
 .vs/
+baseq2/save/
 ctf/debug/
 ctf/release/
 debug/
