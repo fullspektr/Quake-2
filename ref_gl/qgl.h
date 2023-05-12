@@ -483,4 +483,6 @@ void Fake_glColorTableEXT( GLenum target, GLenum internalformat,
 
 extern int GL_TEXTURE0, GL_TEXTURE1;
 
+#define GL_TEXTURE_MAX_ANISOTROPY_EXT		0x84FE
+
 #endif

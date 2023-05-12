@@ -99,6 +99,7 @@ cvar_t	*gl_ext_palettedtexture;
 cvar_t	*gl_ext_multitexture;
 cvar_t	*gl_ext_pointparameters;
 cvar_t	*gl_ext_compiled_vertex_array;
+cvar_t	*gl_ext_texture_filter_anisotropic;
 
 cvar_t	*gl_log;
 cvar_t	*gl_bitdepth;
@@ -1026,6 +1027,7 @@ void R_Register( void )
 	gl_ext_multitexture = ri.Cvar_Get( "gl_ext_multitexture", "1", CVAR_ARCHIVE );
 	gl_ext_pointparameters = ri.Cvar_Get( "gl_ext_pointparameters", "1", CVAR_ARCHIVE );
 	gl_ext_compiled_vertex_array = ri.Cvar_Get( "gl_ext_compiled_vertex_array", "1", CVAR_ARCHIVE );
+	gl_ext_texture_filter_anisotropic = ri.Cvar_Get( "gl_ext_texture_filter_anisotropic", "4", CVAR_ARCHIVE );
 
 	gl_drawbuffer = ri.Cvar_Get( "gl_drawbuffer", "GL_BACK", 0 );
 	gl_swapinterval = ri.Cvar_Get( "gl_swapinterval", "1", CVAR_ARCHIVE );

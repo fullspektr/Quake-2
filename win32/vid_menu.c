@@ -34,6 +34,7 @@ extern cvar_t *scr_viewsize;
 static cvar_t *gl_mode;
 static cvar_t *gl_driver;
 static cvar_t *gl_picmip;
+static cvar_t *gl_ext_texture_filter_anisotropic;
 static cvar_t *gl_ext_palettedtexture;
 static cvar_t *gl_finish;
 
@@ -60,6 +61,7 @@ static int				s_current_menu_index;
 static menulist_s		s_mode_list[2];
 static menulist_s		s_ref_list[2];
 static menuslider_s		s_tq_slider;
+static menuslider_s		s_tex_max_ani_slider;
 static menuslider_s		s_screensize_slider[2];
 static menuslider_s		s_brightness_slider[2];
 static menulist_s  		s_fs_box[2];
@@ -136,6 +138,7 @@ static void ApplyChanges( void *unused )
 	Cvar_SetValue( "gl_picmip", 3 - s_tq_slider.curvalue );
 	Cvar_SetValue( "vid_fullscreen", s_fs_box[s_current_menu_index].curvalue );
 	Cvar_SetValue( "gl_ext_palettedtexture", s_paletted_texture_box.curvalue );
+	Cvar_SetValue( "gl_ext_texture_filter_anisotropic", s_tex_max_ani_slider.curvalue );
 	Cvar_SetValue( "gl_finish", s_finish_box.curvalue );
 	Cvar_SetValue( "sw_mode", s_mode_list[SOFTWARE_MENU].curvalue );
 	Cvar_SetValue( "gl_mode", s_mode_list[OPENGL_MENU].curvalue );
@@ -250,6 +253,8 @@ void VID_MenuInit( void )
 		sw_mode = Cvar_Get( "sw_mode", "0", 0 );
 	if ( !gl_ext_palettedtexture )
 		gl_ext_palettedtexture = Cvar_Get( "gl_ext_palettedtexture", "1", CVAR_ARCHIVE );
+	if ( !gl_ext_texture_filter_anisotropic )
+		gl_ext_texture_filter_anisotropic = Cvar_Get( "gl_ext_texture_filter_anisotropic", "4", CVAR_ARCHIVE );
 	if ( !gl_finish )
 		gl_finish = Cvar_Get( "gl_finish", "0", CVAR_ARCHIVE );
 
@@ -331,13 +336,13 @@ void VID_MenuInit( void )
 		s_defaults_action[i].generic.type = MTYPE_ACTION;
 		s_defaults_action[i].generic.name = "reset to defaults";
 		s_defaults_action[i].generic.x    = 0;
-		s_defaults_action[i].generic.y    = 90;
+		s_defaults_action[i].generic.y    = 100;
 		s_defaults_action[i].generic.callback = ResetDefaults;
 
 		s_cancel_action[i].generic.type = MTYPE_ACTION;
 		s_cancel_action[i].generic.name = "cancel";
 		s_cancel_action[i].generic.x    = 0;
-		s_cancel_action[i].generic.y    = 100;
+		s_cancel_action[i].generic.y    = 110;
 		s_cancel_action[i].generic.callback = CancelChanges;
 	}
 
@@ -356,16 +361,24 @@ void VID_MenuInit( void )
 	s_tq_slider.maxvalue = 3;
 	s_tq_slider.curvalue = 3-gl_picmip->value;
 
+	s_tex_max_ani_slider.generic.type = MTYPE_SLIDER;
+	s_tex_max_ani_slider.generic.x = 0;
+	s_tex_max_ani_slider.generic.y = 70;
+	s_tex_max_ani_slider.generic.name = "max anisotropy";
+	s_tex_max_ani_slider.minvalue = 0;
+	s_tex_max_ani_slider.maxvalue = 4;
+	s_tex_max_ani_slider.curvalue = gl_ext_texture_filter_anisotropic->value;
+
 	s_paletted_texture_box.generic.type = MTYPE_SPINCONTROL;
 	s_paletted_texture_box.generic.x	= 0;
-	s_paletted_texture_box.generic.y	= 70;
+	s_paletted_texture_box.generic.y	= 80;
 	s_paletted_texture_box.generic.name	= "8-bit textures";
 	s_paletted_texture_box.itemnames = yesno_names;
 	s_paletted_texture_box.curvalue = gl_ext_palettedtexture->value;
 
 	s_finish_box.generic.type = MTYPE_SPINCONTROL;
 	s_finish_box.generic.x	= 0;
-	s_finish_box.generic.y	= 80;
+	s_finish_box.generic.y	= 90;
 	s_finish_box.generic.name	= "sync every frame";
 	s_finish_box.curvalue = gl_finish->value;
 	s_finish_box.itemnames = yesno_names;
@@ -383,6 +396,7 @@ void VID_MenuInit( void )
 	Menu_AddItem( &s_opengl_menu, ( void * ) &s_brightness_slider[OPENGL_MENU] );
 	Menu_AddItem( &s_opengl_menu, ( void * ) &s_fs_box[OPENGL_MENU] );
 	Menu_AddItem( &s_opengl_menu, ( void * ) &s_tq_slider );
+	Menu_AddItem( &s_opengl_menu, ( void * ) &s_tex_max_ani_slider );
 	Menu_AddItem( &s_opengl_menu, ( void * ) &s_paletted_texture_box );
 	Menu_AddItem( &s_opengl_menu, ( void * ) &s_finish_box );
 
