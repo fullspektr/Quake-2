@@ -1,6 +1,6 @@
 *.user
-
 .vs/
+baseq2/*.pak
 baseq2/save/
 ctf/debug/
 ctf/release/
