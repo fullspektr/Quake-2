@@ -60,6 +60,7 @@ static qboolean VerifyDriver( void )
 ** VID_CreateWindow
 */
 #define	WINDOW_CLASS_NAME	"Quake 2"
+#define	DUMMY_WINDOW_CLASS_NAME	"Quake 2 Dummy"
 
 qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 {
@@ -397,13 +398,13 @@ qboolean GLimp_InitGL (void)
 		PFD_SUPPORT_OPENGL |			// support OpenGL
 		PFD_DOUBLEBUFFER,				// double buffered
 		PFD_TYPE_RGBA,					// RGBA type
-		24,								// 24-bit color depth
+		32,								// 32-bit color depth
 		0, 0, 0, 0, 0, 0,				// color bits ignored
 		0,								// no alpha buffer
 		0,								// shift bit ignored
 		0,								// no accumulation buffer
 		0, 0, 0, 0, 					// accum bits ignored
-		32,								// 32-bit z-buffer	
+		24,								// 24-bit z-buffer	
 		0,								// no stencil buffer
 		0,								// no auxiliary buffer
 		PFD_MAIN_PLANE,					// main layer
@@ -412,6 +413,7 @@ qboolean GLimp_InitGL (void)
     };
     int  pixelformat;
 	cvar_t *stereo;
+	qboolean wgl_choose = false;
 	
 	stereo = ri.Cvar_Get( "cl_stereo", "0", 0 );
 
@@ -465,14 +467,59 @@ qboolean GLimp_InitGL (void)
 	}
 	else
 	{
-		if ( ( pixelformat = ChoosePixelFormat( glw_state.hDC, &pfd)) == 0 )
+		// create dummy window and get proc address wglChoosePixelFormatARB
+		WNDCLASS wc = { 0 };
+		wc.lpfnWndProc = DefWindowProc;
+		wc.hInstance = glw_state.hInstance;
+		wc.lpszClassName = DUMMY_WINDOW_CLASS_NAME;
+		RegisterClass( &wc );
+		HWND dummy_wnd = CreateWindow( DUMMY_WINDOW_CLASS_NAME, NULL, 0, 0, 0, 0, 0, NULL, NULL, glw_state.hInstance, NULL );
+		HDC dummy_dc = GetDC( dummy_wnd );
+		pixelformat = ChoosePixelFormat( dummy_dc, &pfd );
+		SetPixelFormat( dummy_dc, pixelformat, &pfd );
+		HGLRC dummy_rc = qwglCreateContext( dummy_dc );
+		qwglMakeCurrent( dummy_dc, dummy_rc );
+		
+		BOOL ( WINAPI * qwglChoosePixelFormatARB ) ( HDC hdc, const int* piAttribIList, const FLOAT * pfAttribFList, UINT nMaxFormats, int* piFormats, UINT * nNumFormats );
+		qwglChoosePixelFormatARB = qwglGetProcAddress( "wglChoosePixelFormatARB" );
+
+		qwglMakeCurrent( dummy_dc, NULL );
+		qwglDeleteContext( dummy_rc );
+		ReleaseDC( dummy_wnd, dummy_dc );
+		DestroyWindow( dummy_wnd );
+		UnregisterClass( DUMMY_WINDOW_CLASS_NAME, glw_state.hInstance );
+
+		if ( qwglChoosePixelFormatARB )
 		{
-			ri.Con_Printf (PRINT_ALL, "GLimp_Init() - ChoosePixelFormat failed\n");
-			return false;
+			UINT num_formats;
+			const int attributes[] = {
+				WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+				WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+				WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+				WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
+				WGL_COLOR_BITS_ARB, 32,
+				WGL_DEPTH_BITS_ARB, 24,
+				WGL_SAMPLES_ARB, (int)gl_samples->value,
+				0
+			};
+			if ( qwglChoosePixelFormatARB( glw_state.hDC, attributes, NULL, 1, &pixelformat, &num_formats ) != FALSE && num_formats > 0 )
+			{
+				wgl_choose = true;
+			}
 		}
-		if ( SetPixelFormat( glw_state.hDC, pixelformat, &pfd) == FALSE )
+
+		if ( !wgl_choose )
 		{
-			ri.Con_Printf (PRINT_ALL, "GLimp_Init() - SetPixelFormat failed\n");
+			if ( ( pixelformat = ChoosePixelFormat( glw_state.hDC, &pfd ) ) == 0 )
+			{
+				ri.Con_Printf( PRINT_ALL, "GLimp_Init() - ChoosePixelFormat failed\n" );
+				return false;
+			}
+		}
+
+		if ( SetPixelFormat( glw_state.hDC, pixelformat, &pfd ) == FALSE )
+		{
+			ri.Con_Printf( PRINT_ALL, "GLimp_Init() - SetPixelFormat failed\n" );
 			return false;
 		}
 		DescribePixelFormat( glw_state.hDC, pixelformat, sizeof( pfd ), &pfd );
@@ -529,7 +576,19 @@ qboolean GLimp_InitGL (void)
 	/*
 	** print out PFD specifics 
 	*/
-	ri.Con_Printf( PRINT_ALL, "GL PFD: color(%d-bits) Z(%d-bit)\n", ( int ) pfd.cColorBits, ( int ) pfd.cDepthBits );
+	BOOL( WINAPI* qwglGetPixelFormatAttribivARB ) ( HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, const int* piAttributes, int* piValues );
+	qwglGetPixelFormatAttribivARB = qwglGetProcAddress( "wglGetPixelFormatAttribivARB" );
+	if ( qwglGetPixelFormatAttribivARB && wgl_choose )
+	{
+		const int attributes[] = { WGL_SAMPLES_ARB };
+		int samples = 0;
+		qwglGetPixelFormatAttribivARB( glw_state.hDC, pixelformat, 0, 1, attributes, &samples );
+		ri.Con_Printf( PRINT_ALL, "GL PFD: color(%d-bits) Z(%d-bit) samples(%d)\n", ( int ) pfd.cColorBits, ( int ) pfd.cDepthBits, samples );
+	}
+	else
+	{
+		ri.Con_Printf( PRINT_ALL, "GL PFD: color(%d-bits) Z(%d-bit)\n", ( int ) pfd.cColorBits, ( int ) pfd.cDepthBits);
+	}
 
 	return true;
 

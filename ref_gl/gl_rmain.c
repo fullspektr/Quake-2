@@ -129,6 +129,7 @@ cvar_t	*gl_texturemode;
 cvar_t	*gl_texturealphamode;
 cvar_t	*gl_texturesolidmode;
 cvar_t	*gl_lockpvs;
+cvar_t	*gl_samples;
 
 cvar_t	*gl_3dlabs_broken;
 
@@ -1030,6 +1031,7 @@ void R_Register( void )
 	gl_ext_texture_filter_anisotropic = ri.Cvar_Get( "gl_ext_texture_filter_anisotropic", "4", CVAR_ARCHIVE );
 
 	gl_drawbuffer = ri.Cvar_Get( "gl_drawbuffer", "GL_BACK", 0 );
+	gl_samples = ri.Cvar_Get( "gl_samples", "0", CVAR_ARCHIVE );
 	gl_swapinterval = ri.Cvar_Get( "gl_swapinterval", "1", CVAR_ARCHIVE );
 
 	gl_saturatelighting = ri.Cvar_Get( "gl_saturatelighting", "0", 0 );
